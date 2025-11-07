@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import logo from '../../assets/VaniGo-Logo.png';
+import { authService } from '../../services/authService';
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -10,15 +11,33 @@ function RegisterPage() {
     password: '',
     confirmPassword: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
-    localStorage.setItem('isAuthenticated', 'true');
-    navigate('/chat');
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await authService.register(formData.name, formData.email, formData.password);
+      navigate('/chat');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,13 +52,19 @@ function RegisterPage() {
         
         <div className="text-center mb-8">
           <Link to="/">
-            <img src={logo} alt="VaniGo" className="h-30 mx-auto mb-4" />
+            <img src={logo} alt="VaniGo" className="h-32 mx-auto mb-4" />
           </Link>
           <h1 className="font-montserrat text-4xl font-bold text-gray-900 mb-2">
             Create <span className="text-vanigo-green">Account</span>
           </h1>
           <p className="font-poppins text-gray-600">Join VaniGo today</p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 border-2 border-red-500 bg-red-50">
+            <p className="font-poppins text-red-600 text-sm">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
@@ -101,8 +126,9 @@ function RegisterPage() {
 
           <button 
             type="submit"
-            className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-            Create Account
+            disabled={loading}
+            className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-50">
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
 
           <div className="text-center">

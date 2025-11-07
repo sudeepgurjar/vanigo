@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import logo from '../../assets/VaniGo-Logo.png';
+import { authService } from '../../services/authService';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -8,11 +9,22 @@ function LoginPage() {
     email: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    localStorage.setItem('isAuthenticated', 'true');
-    navigate('/chat');
+    setLoading(true);
+    setError('');
+
+    try {
+      await authService.login(formData.email, formData.password);
+      navigate('/chat');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,13 +39,19 @@ function LoginPage() {
         
         <div className="text-center mb-8">
           <Link to="/">
-            <img src={logo} alt="VaniGo" className="h-30 mx-auto mb-4" />
+            <img src={logo} alt="VaniGo" className="h-32 mx-auto mb-4" />
           </Link>
           <h1 className="font-montserrat text-4xl font-bold text-gray-900 mb-2">
             Welcome <span className="text-vanigo-green">Back</span>
           </h1>
           <p className="font-poppins text-gray-600">Sign in to continue to VaniGo</p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 border-2 border-red-500 bg-red-50">
+            <p className="font-poppins text-red-600 text-sm">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
@@ -77,8 +95,9 @@ function LoginPage() {
 
           <button 
             type="submit"
-            className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-            Sign In
+            disabled={loading}
+            className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-50">
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
 
           <div className="text-center">

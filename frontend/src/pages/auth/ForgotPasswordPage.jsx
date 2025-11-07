@@ -1,15 +1,27 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import logo from '../../assets/VaniGo-Logo.png';
+import { authService } from '../../services/authService';
 
 function ForgotPasswordPage() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
+    setLoading(true);
+    setError('');
+
+    try {
+      await authService.forgotPassword(email);
+      setSent(true);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send reset email');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,6 +45,12 @@ function ForgotPasswordPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 border-2 border-red-500 bg-red-50">
+            <p className="font-poppins text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
         {!sent ? (
           <form onSubmit={handleSubmit} className="space-y-6">
             
@@ -52,8 +70,9 @@ function ForgotPasswordPage() {
 
             <button 
               type="submit"
-              className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-              Send Reset Link
+              disabled={loading}
+              className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-50">
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
 
             <div className="text-center">

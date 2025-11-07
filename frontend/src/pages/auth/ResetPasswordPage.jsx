@@ -1,6 +1,7 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import logo from '../../assets/VaniGo-Logo.png';
+import { authService } from '../../services/authService';
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -11,15 +12,34 @@ function ResetPasswordPage() {
     password: '',
     confirmPassword: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
-    alert('Password reset successful!');
-    navigate('/login');
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await authService.resetPassword(token, formData.password);
+      alert('Password reset successful!');
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Password reset failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,6 +59,12 @@ function ResetPasswordPage() {
           </h1>
           <p className="font-poppins text-gray-600">Enter your new password</p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 border-2 border-red-500 bg-red-50">
+            <p className="font-poppins text-red-600 text-sm">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
@@ -72,8 +98,9 @@ function ResetPasswordPage() {
 
           <button 
             type="submit"
-            className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-            Reset Password
+            disabled={loading}
+            className="w-full px-6 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-50">
+            {loading ? 'Resetting...' : 'Reset Password'}
           </button>
 
         </form>

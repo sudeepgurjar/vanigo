@@ -1,57 +1,61 @@
-import { Link, useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import logo from '../assets/VaniGo-Logo.png';
+import { authService } from '../services/authService';
+import { conversationService } from '../services/conversationService';
 
 function ConversationDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  
+  const [conversation, setConversation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const [conversation] = useState({
-    id: id,
-    title: 'Project Planning Discussion',
-    date: '2024-11-04',
-    startTime: '10:30 AM',
-    endTime: '11:15 AM',
-    duration: '45 minutes',
-    summary: 'Discussed project timeline, milestones, and team responsibilities for the upcoming quarter.',
-    messages: [
-      {
-        id: 1,
-        text: 'Can you help me plan my project timeline?',
-        sender: 'user',
-        timestamp: '10:30 AM'
-      },
-      {
-        id: 2,
-        text: 'Of course! I can help you create a structured project timeline. What is your project about?',
-        sender: 'ai',
-        timestamp: '10:30 AM'
-      },
-      {
-        id: 3,
-        text: 'I am building an AI-powered chat application with Spring Boot and React.',
-        sender: 'user',
-        timestamp: '10:31 AM'
-      },
-      {
-        id: 4,
-        text: 'Great! Here is a suggested timeline: Week 1-2: Backend setup, Week 3-4: Frontend development, Week 5-6: Integration and testing.',
-        sender: 'ai',
-        timestamp: '10:32 AM'
-      },
-      {
-        id: 5,
-        text: 'What about deployment?',
-        sender: 'user',
-        timestamp: '10:35 AM'
-      },
-      {
-        id: 6,
-        text: 'Week 7: Deploy backend to AWS, Week 8: Deploy frontend to Vercel, final testing in production.',
-        sender: 'ai',
-        timestamp: '10:36 AM'
-      }
-    ]
-  });
+  useEffect(() => {
+    fetchConversation();
+  }, [id]);
+
+  const fetchConversation = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await conversationService.getConversationById(id);
+      setConversation(data);
+    } catch (err) {
+      setError('Failed to load conversation');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/');
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const calculateDuration = (start, end) => {
+    if (!end) return 'Ongoing';
+    const diff = new Date(end) - new Date(start);
+    const minutes = Math.floor(diff / 60000);
+    return `${minutes} minutes`;
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -73,6 +77,11 @@ function ConversationDetailPage() {
                   New Chat
                 </button>
               </Link>
+              <button 
+                onClick={handleLogout}
+                className="px-6 py-2 border-2 border-red-500 font-poppins font-semibold text-red-500 hover:shadow-2xl hover:bg-red-500 hover:text-white transition-all duration-300">
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -89,46 +98,81 @@ function ConversationDetailPage() {
             <Link to="/dashboard" className="font-poppins text-vanigo-green hover:underline mb-4 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="font-montserrat text-4xl font-bold text-gray-900 mb-4">
-              {conversation.title}
-            </h1>
-            
-            <div className="flex flex-wrap gap-6 font-poppins text-gray-600 mb-6">
-              <div>
-                <span className="font-semibold">Date:</span> {conversation.date}
-              </div>
-              <div>
-                <span className="font-semibold">Time:</span> {conversation.startTime} - {conversation.endTime}
-              </div>
-              <div>
-                <span className="font-semibold">Duration:</span> {conversation.duration}
-              </div>
-              <div>
-                <span className="font-semibold">Messages:</span> {conversation.messages.length}
-              </div>
-            </div>
 
-            <div className="p-6 border-2 border-gray-200 bg-green-50 mb-8">
-              <h3 className="font-montserrat text-xl font-bold mb-2">Summary</h3>
-              <p className="font-poppins text-gray-700">{conversation.summary}</p>
-            </div>
-          </div>
-
-          <div className="border-2 border-gray-200 p-6">
-            <h2 className="font-montserrat text-2xl font-bold mb-6">Conversation History</h2>
-            
-            <div className="space-y-4">
-              {conversation.messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-2xl px-4 py-3 border-2 ${msg.sender === 'user' ? 'border-black bg-black text-white' : 'border-gray-300 bg-white text-gray-900'}`}>
-                    <p className="font-poppins">{msg.text}</p>
-                    <span className={`text-xs font-poppins mt-1 block ${msg.sender === 'user' ? 'text-gray-300' : 'text-gray-500'}`}>
-                      {msg.timestamp}
+            {loading ? (
+              <div className="text-center py-20">
+                <p className="font-poppins text-xl text-gray-400">Loading conversation...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <p className="font-poppins text-xl text-red-500">{error}</p>
+                <button 
+                  onClick={fetchConversation}
+                  className="mt-4 px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                  Retry
+                </button>
+              </div>
+            ) : conversation ? (
+              <>
+                <h1 className="font-montserrat text-4xl font-bold text-gray-900 mb-4">
+                  {conversation.title || 'Untitled Conversation'}
+                </h1>
+                
+                <div className="flex flex-wrap gap-6 font-poppins text-gray-600 mb-6">
+                  <div>
+                    <span className="font-semibold">Date:</span> {formatDate(conversation.startedAt)}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Started:</span> {formatTime(conversation.startedAt)}
+                  </div>
+                  {conversation.endedAt && (
+                    <div>
+                      <span className="font-semibold">Ended:</span> {formatTime(conversation.endedAt)}
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-semibold">Duration:</span> {calculateDuration(conversation.startedAt, conversation.endedAt)}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Messages:</span> {conversation.messages?.length || 0}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Status:</span> 
+                    <span className={`ml-2 px-2 py-1 text-sm font-semibold ${conversation.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                      {conversation.active ? 'Active' : 'Ended'}
                     </span>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {conversation.summary && (
+                  <div className="p-6 border-2 border-gray-200 bg-green-50 mb-8">
+                    <h3 className="font-montserrat text-xl font-bold mb-2">Summary</h3>
+                    <p className="font-poppins text-gray-700">{conversation.summary}</p>
+                  </div>
+                )}
+
+                <div className="border-2 border-gray-200 p-6">
+                  <h2 className="font-montserrat text-2xl font-bold mb-6">Conversation History</h2>
+                  
+                  {conversation.messages && conversation.messages.length > 0 ? (
+                    <div className="space-y-4">
+                      {conversation.messages.map((msg) => (
+                        <div key={msg.id} className={`flex ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-2xl px-4 py-3 border-2 ${msg.sender === 'USER' ? 'border-black bg-black text-white' : 'border-gray-300 bg-white text-gray-900'}`}>
+                            <p className="font-poppins whitespace-pre-wrap">{msg.content}</p>
+                            <span className={`text-xs font-poppins mt-1 block ${msg.sender === 'USER' ? 'text-gray-300' : 'text-gray-500'}`}>
+                              {formatTime(msg.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="font-poppins text-gray-400 text-center py-8">No messages in this conversation</p>
+                  )}
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
 

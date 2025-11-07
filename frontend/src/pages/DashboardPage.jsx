@@ -1,49 +1,58 @@
-import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import logo from '../assets/VaniGo-Logo.png';
+import { authService } from '../services/authService';
+import { conversationService } from '../services/conversationService';
 
 function DashboardPage() {
-  const [conversations, setConversations] = useState([
-    {
-      id: 1,
-      title: 'Project Planning Discussion',
-      date: '2024-11-04',
-      time: '10:30 AM',
-      messageCount: 15,
-      summary: 'Discussed project timeline and milestones'
-    },
-    {
-      id: 2,
-      title: 'AI Model Training Query',
-      date: '2024-11-03',
-      time: '02:15 PM',
-      messageCount: 8,
-      summary: 'Asked about training AI models with custom datasets'
-    },
-    {
-      id: 3,
-      title: 'Spring Boot Architecture',
-      date: '2024-11-02',
-      time: '04:45 PM',
-      messageCount: 22,
-      summary: 'Explored microservices architecture patterns'
-    },
-    {
-      id: 4,
-      title: 'React Performance Tips',
-      date: '2024-11-01',
-      time: '11:20 AM',
-      messageCount: 12,
-      summary: 'Optimizing React components for better performance'
-    }
-  ]);
-
+  const navigate = useNavigate();
+  const [conversations, setConversations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  const fetchConversations = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await conversationService.getAllConversations();
+      setConversations(data);
+    } catch (err) {
+      setError('Failed to load conversations');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/');
+  };
 
   const filteredConversations = conversations.filter(conv =>
-    conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.summary.toLowerCase().includes(searchQuery.toLowerCase())
+    conv.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conv.summary?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -65,6 +74,11 @@ function DashboardPage() {
                   Intelligence
                 </button>
               </Link>
+              <button 
+                onClick={handleLogout}
+                className="px-6 py-2 border-2 border-red-500 font-poppins font-semibold text-red-500 hover:shadow-2xl hover:bg-red-500 hover:text-white transition-all duration-300">
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -98,39 +112,70 @@ function DashboardPage() {
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {filteredConversations.length === 0 ? (
-              <div className="col-span-2 text-center py-20">
-                <p className="font-poppins text-xl text-gray-400">No conversations found</p>
-              </div>
-            ) : (
-              filteredConversations.map((conv) => (
-                <Link key={conv.id} to={`/conversation/${conv.id}`}>
-                  <div className="p-6 border-2 border-gray-200 hover:border-black transition-all duration-300 hover:shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-12 h-12 bg-green-200 opacity-15 rotate-45"></div>
-                    
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-montserrat text-xl font-bold text-gray-900">
-                        {conv.title}
-                      </h3>
-                      <span className="px-3 py-1 bg-vanigo-green text-white font-poppins text-sm font-semibold">
-                        {conv.messageCount} msgs
-                      </span>
-                    </div>
+          {loading ? (
+            <div className="text-center py-20">
+              <p className="font-poppins text-xl text-gray-400">Loading conversations...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20">
+              <p className="font-poppins text-xl text-red-500">{error}</p>
+              <button 
+                onClick={fetchConversations}
+                className="mt-4 px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {filteredConversations.length === 0 ? (
+                <div className="col-span-2 text-center py-20">
+                  <p className="font-poppins text-xl text-gray-400">
+                    {searchQuery ? 'No conversations found' : 'No conversations yet. Start chatting!'}
+                  </p>
+                  {!searchQuery && (
+                    <Link to="/chat">
+                      <button className="mt-4 px-8 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                        Start First Conversation
+                      </button>
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                filteredConversations.map((conv) => (
+                  <Link key={conv.id} to={`/conversation/${conv.id}`}>
+                    <div className="p-6 border-2 border-gray-200 hover:border-black transition-all duration-300 hover:shadow-2xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-12 h-12 bg-green-200 opacity-15 rotate-45"></div>
+                      
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-montserrat text-xl font-bold text-gray-900 flex-1 pr-4">
+                          {conv.title || 'Untitled Conversation'}
+                        </h3>
+                        <div className="flex gap-2">
+                          <span className="px-3 py-1 bg-vanigo-green text-white font-poppins text-sm font-semibold">
+                            {conv.messageCount || 0} msgs
+                          </span>
+                          {conv.active && (
+                            <span className="px-3 py-1 bg-yellow-400 text-black font-poppins text-sm font-semibold">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                    <p className="font-poppins text-gray-600 mb-4">
-                      {conv.summary}
-                    </p>
+                      <p className="font-poppins text-gray-600 mb-4 line-clamp-2">
+                        {conv.summary || 'No summary available'}
+                      </p>
 
-                    <div className="flex justify-between items-center text-sm font-poppins text-gray-500">
-                      <span>{conv.date}</span>
-                      <span>{conv.time}</span>
+                      <div className="flex justify-between items-center text-sm font-poppins text-gray-500">
+                        <span>{formatDate(conv.startedAt)}</span>
+                        <span>{formatTime(conv.startedAt)}</span>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
       </main>

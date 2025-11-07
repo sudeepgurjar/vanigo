@@ -1,7 +1,22 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import logo from '../assets/VaniGo-Logo.png';
+import { authService } from '../services/authService';
 
 function HomePage() {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    setIsAuthenticated(authService.isAuthenticated());
+  }, []);
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -12,21 +27,38 @@ function HomePage() {
               <img src={logo} alt="VaniGo" className="h-18" />
             </div>
             <div className="flex gap-4">
-              <Link to="/login">
-              <button className="px-6 py-2 border-2 border-vanigo-green font-poppins font-semibold text-vanigo-green hover:shadow-2xl hover:bg-green-500 hover:text-black transition-all duration-300">
-               Sign In
-              </button>
-              </Link>
-              <Link to="/dashboard">
-                <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-                  Dashboard
-                </button>
-              </Link>
-              <Link to="/chat">
-                <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-                  Start Chat
-                </button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link to="/dashboard">
+                    <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                      Dashboard
+                    </button>
+                  </Link>
+                  <Link to="/chat">
+                    <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                      Start Chat
+                    </button>
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="px-6 py-2 border-2 border-red-500 font-poppins font-semibold text-red-500 hover:shadow-2xl hover:bg-red-500 hover:text-white transition-all duration-300">
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <button className="px-6 py-2 border-2 border-vanigo-green font-poppins font-semibold text-vanigo-green hover:shadow-2xl hover:bg-vanigo-green hover:text-white transition-all duration-300">
+                      Sign In
+                    </button>
+                  </Link>
+                  <Link to="/register">
+                    <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                      Sign Up
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -58,12 +90,12 @@ function HomePage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/chat">
+              <Link to={isAuthenticated ? "/chat" : "/login"}>
                 <button className="px-8 py-4 border-2 border-black font-poppins font-semibold text-lg text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300 w-full sm:w-auto">
                   Start Chatting Now
                 </button>
               </Link>
-              <Link to="/intelligence">
+              <Link to={isAuthenticated ? "/intelligence" : "/login"}>
                 <button className="px-8 py-4 border-2 border-black font-poppins font-semibold text-lg text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300 w-full sm:w-auto">
                   Explore Intelligence
                 </button>
@@ -122,9 +154,9 @@ function HomePage() {
             <p className="font-poppins text-xl text-gray-600 mb-8">
               Start chatting with AI and unlock the power of intelligent conversation management
             </p>
-            <Link to="/chat">
+            <Link to={isAuthenticated ? "/chat" : "/register"}>
               <button className="px-10 py-4 border-2 border-black font-poppins font-semibold text-xl text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-                Get Started Free
+                {isAuthenticated ? "Start Chatting" : "Get Started Free"}
               </button>
             </Link>
           </div>

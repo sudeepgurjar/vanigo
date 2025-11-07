@@ -1,44 +1,43 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import logo from '../assets/VaniGo-Logo.png';
+import { authService } from '../services/authService';
+import { intelligenceService } from '../services/intelligenceService';
 
 function IntelligencePage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!query.trim()) return;
 
     setIsSearching(true);
+    setError('');
 
-    setTimeout(() => {
+    try {
+      const data = await intelligenceService.queryConversations(query);
       setResults({
-        answer: 'Based on your past conversations, you discussed project planning on November 4th where you covered timeline creation, milestone setting, and deployment strategies for your AI chat application.',
-        relevantConversations: [
-          {
-            id: 1,
-            title: 'Project Planning Discussion',
-            date: '2024-11-04',
-            excerpt: 'Discussed project timeline, milestones, and team responsibilities...',
-            relevance: 95
-          },
-          {
-            id: 3,
-            title: 'Spring Boot Architecture',
-            date: '2024-11-02',
-            excerpt: 'Explored microservices architecture patterns and best practices...',
-            relevance: 78
-          }
-        ],
+        answer: data.answer || data.message || 'No answer found',
+        relevantConversations: [],
         insights: [
-          'You have 4 conversations about software development',
-          'Most discussed topic: AI and Machine Learning',
-          'Average conversation length: 15 messages'
+          'AI intelligence features are currently in development',
+          'Full semantic search will be available soon',
+          'Conversation analysis and insights coming with Ollama integration'
         ]
       });
+    } catch (err) {
+      setError('Failed to process query: ' + (err.response?.data?.message || err.message));
+    } finally {
       setIsSearching(false);
-    }, 2000);
+    }
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/');
   };
 
   return (
@@ -61,6 +60,11 @@ function IntelligencePage() {
                   New Chat
                 </button>
               </Link>
+              <button 
+                onClick={handleLogout}
+                className="px-6 py-2 border-2 border-red-500 font-poppins font-semibold text-red-500 hover:shadow-2xl hover:bg-red-500 hover:text-white transition-all duration-300">
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -96,7 +100,7 @@ function IntelligencePage() {
               />
               <button 
                 onClick={handleSearch}
-                disabled={isSearching}
+                disabled={isSearching || !query.trim()}
                 className="px-8 py-3 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-50">
                 {isSearching ? 'Searching...' : 'Search'}
               </button>
@@ -116,6 +120,12 @@ function IntelligencePage() {
             </div>
           </div>
 
+          {error && (
+            <div className="max-w-3xl mx-auto mb-8 p-4 border-2 border-red-500 bg-red-50">
+              <p className="font-poppins text-red-600">{error}</p>
+            </div>
+          )}
+
           {results && (
             <div className="space-y-6">
               
@@ -125,33 +135,35 @@ function IntelligencePage() {
                 <p className="font-poppins text-gray-800 text-lg">{results.answer}</p>
               </div>
 
-              <div>
-                <h2 className="font-montserrat text-2xl font-bold mb-4">Relevant Conversations</h2>
-                <div className="space-y-4">
-                  {results.relevantConversations.map((conv) => (
-                    <Link key={conv.id} to={`/conversation/${conv.id}`}>
-                      <div className="p-6 border-2 border-gray-200 hover:border-black transition-all duration-300 hover:shadow-2xl relative overflow-hidden">
-                        <div className="absolute bottom-0 left-0 w-12 h-12 bg-green-300 opacity-15"></div>
-                        
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-montserrat text-xl font-bold text-gray-900">
-                            {conv.title}
-                          </h3>
-                          <span className="px-3 py-1 bg-vanigo-green text-white font-poppins text-sm font-semibold">
-                            {conv.relevance}% match
-                          </span>
+              {results.relevantConversations && results.relevantConversations.length > 0 && (
+                <div>
+                  <h2 className="font-montserrat text-2xl font-bold mb-4">Relevant Conversations</h2>
+                  <div className="space-y-4">
+                    {results.relevantConversations.map((conv) => (
+                      <Link key={conv.id} to={`/conversation/${conv.id}`}>
+                        <div className="p-6 border-2 border-gray-200 hover:border-black transition-all duration-300 hover:shadow-2xl relative overflow-hidden">
+                          <div className="absolute bottom-0 left-0 w-12 h-12 bg-green-300 opacity-15"></div>
+                          
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="font-montserrat text-xl font-bold text-gray-900">
+                              {conv.title}
+                            </h3>
+                            <span className="px-3 py-1 bg-vanigo-green text-white font-poppins text-sm font-semibold">
+                              {conv.relevance}% match
+                            </span>
+                          </div>
+
+                          <p className="font-poppins text-gray-600 mb-2">
+                            {conv.excerpt}
+                          </p>
+
+                          <span className="font-poppins text-sm text-gray-500">{conv.date}</span>
                         </div>
-
-                        <p className="font-poppins text-gray-600 mb-2">
-                          {conv.excerpt}
-                        </p>
-
-                        <span className="font-poppins text-sm text-gray-500">{conv.date}</span>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="p-6 border-2 border-gray-200 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-14 h-14 bg-green-200 opacity-15 rounded-full"></div>
@@ -169,7 +181,7 @@ function IntelligencePage() {
             </div>
           )}
 
-          {!results && !isSearching && (
+          {!results && !isSearching && !error && (
             <div className="text-center py-20">
               <div className="w-24 h-24 bg-green-100 mx-auto mb-6 flex items-center justify-center">
                 <div className="w-16 h-16 border-4 border-vanigo-green"></div>

@@ -1,7 +1,15 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../services/authService';
 import logo from '../assets/VaniGo-Logo.png';
 
 function NotFoundPage() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
 
@@ -12,16 +20,38 @@ function NotFoundPage() {
               <img src={logo} alt="VaniGo" className="h-18" />
             </Link>
             <div className="flex gap-4">
-              <Link to="/dashboard">
-                <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-                  Dashboard
-                </button>
-              </Link>
-              <Link to="/chat">
-                <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
-                  Start Chat
-                </button>
-              </Link>
+              {authService.isAuthenticated() ? (
+                <>
+                  <Link to="/dashboard">
+                    <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                      Dashboard
+                    </button>
+                  </Link>
+                  <Link to="/chat">
+                    <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                      Start Chat
+                    </button>
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="px-6 py-2 border-2 border-red-500 font-poppins font-semibold text-red-500 hover:shadow-2xl hover:bg-red-500 hover:text-white transition-all duration-300">
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <button className="px-6 py-2 border-2 border-vanigo-green font-poppins font-semibold text-vanigo-green hover:shadow-2xl hover:bg-vanigo-green hover:text-white transition-all duration-300">
+                      Sign In
+                    </button>
+                  </Link>
+                  <Link to="/register">
+                    <button className="px-6 py-2 border-2 border-black font-poppins font-semibold text-black hover:shadow-2xl hover:bg-black hover:text-white transition-all duration-300">
+                      Sign Up
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -50,11 +80,13 @@ function NotFoundPage() {
                 Go Home
               </button>
             </Link>
-            <Link to="/dashboard">
-              <button className="px-8 py-4 border-2 border-vanigo-green font-poppins font-semibold text-lg text-vanigo-green hover:shadow-2xl hover:bg-vanigo-green hover:text-white transition-all duration-300 w-full sm:w-auto">
-                View Dashboard
-              </button>
-            </Link>
+            {authService.isAuthenticated() && (
+              <Link to="/dashboard">
+                <button className="px-8 py-4 border-2 border-vanigo-green font-poppins font-semibold text-lg text-vanigo-green hover:shadow-2xl hover:bg-vanigo-green hover:text-white transition-all duration-300 w-full sm:w-auto">
+                  View Dashboard
+                </button>
+              </Link>
+            )}
           </div>
         </div>
 
