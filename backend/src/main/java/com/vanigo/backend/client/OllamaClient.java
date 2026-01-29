@@ -5,24 +5,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.*;
 
 @Component
-public class GroqClient {
+public class OllamaClient {
 
     private final WebClient webClient;
     private final String model;
 
-    public GroqClient(
-            @Value("${groq.api.key}") String apiKey,
-            @Value("${groq.api.url}") String apiUrl,
-            @Value("${groq.model}") String model
+    public OllamaClient(
+            @Value("${ollama.api.url}") String apiUrl,
+            @Value("${ollama.model}") String model
     ) {
         this.webClient = WebClient.builder()
                 .baseUrl(apiUrl)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
         this.model = model;
@@ -37,8 +34,7 @@ public class GroqClient {
             Map<String, Object> request = new HashMap<>();
             request.put("model", model);
             request.put("messages", List.of(message));
-            request.put("temperature", 0.7);
-            request.put("max_tokens", 1024);
+            request.put("stream", false);
 
             Map<String, Object> response = webClient.post()
                     .bodyValue(request)
@@ -46,18 +42,14 @@ public class GroqClient {
                     .bodyToMono(Map.class)
                     .block();
 
-            if (response != null && response.containsKey("choices")) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> firstChoice = choices.get(0);
-                    Map<String, Object> messageObj = (Map<String, Object>) firstChoice.get("message");
-                    return messageObj.get("content").toString();
-                }
+            if (response != null && response.containsKey("message")) {
+                Map<String, Object> messageObj = (Map<String, Object>) response.get("message");
+                return messageObj.get("content").toString();
             }
 
             return "Sorry, I couldn't generate a response.";
         } catch (Exception e) {
-            throw new RuntimeException("Failed to communicate with Groq AI: " + e.getMessage());
+            throw new RuntimeException("Failed to communicate with Ollama AI: " + e.getMessage());
         }
     }
 

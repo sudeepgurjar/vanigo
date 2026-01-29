@@ -1,6 +1,6 @@
 package com.vanigo.backend.service;
 
-import com.vanigo.backend.client.GroqClient;
+import com.vanigo.backend.client.OllamaClient;
 import com.vanigo.backend.entity.Conversation;
 import com.vanigo.backend.entity.Message;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 public class AIService {
 
     @Autowired
-    private GroqClient groqClient;
+    private OllamaClient ollamaClient;
 
     public String generateResponse(String userMessage) {
         try {
-            return groqClient.generateResponse(userMessage);
+            return ollamaClient.generateResponse(userMessage);
         } catch (Exception e) {
             return "I apologize, but I'm having trouble generating a response right now. Error: " + e.getMessage();
         }
@@ -33,7 +33,7 @@ public class AIService {
                     .map(msg -> msg.getSender() + ": " + msg.getContent())
                     .collect(Collectors.joining("\n"));
 
-            return groqClient.generateSummary(conversationText);
+            return ollamaClient.generateSummary(conversationText);
         } catch (Exception e) {
             return "Summary generation failed: " + e.getMessage();
         }
@@ -57,7 +57,7 @@ public class AIService {
                 return "No conversation history available to analyze.";
             }
 
-            return groqClient.analyzeConversation(query, conversationHistory);
+            return ollamaClient.analyzeConversation(query, conversationHistory);
         } catch (Exception e) {
             return "Analysis failed: " + e.getMessage();
         }

@@ -63,7 +63,8 @@ function ProjectDetailsPage() {
             <h2 className="font-montserrat text-3xl font-bold mb-6 text-vanigo-green">📋 Project Overview</h2>
             <div className="space-y-3 font-poppins text-gray-700">
               <p><strong>Project Name:</strong> VaniGo - AI Chat Microservice</p>
-              <p><strong>Built By:</strong> Rishikesh Patil</p>
+              <p><strong>Built By:</strong> Sudeep Gurjar, Rishikesh Patil</p>
+               <p><strong>Email:</strong> sudeepgurjar6111@gmail.com</p>
               <p><strong>Email:</strong> patilrishi410@gmail.com</p>
               <p><strong>Tech Stack:</strong> Spring Boot 3.5.7, React 18, PostgreSQL, JWT, Groq AI/Ollama</p>
               <p><strong>Architecture:</strong> Microservice-ready RESTful API</p>
