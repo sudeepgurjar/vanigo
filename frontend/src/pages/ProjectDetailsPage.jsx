@@ -68,7 +68,15 @@ function ProjectDetailsPage() {
               <p><strong>Email:</strong> patilrishi410@gmail.com</p>
               <p><strong>Tech Stack:</strong> Spring Boot 3.5.7, React 18, PostgreSQL, JWT, Groq AI/Ollama</p>
               <p><strong>Architecture:</strong> Microservice-ready RESTful API</p>
-              <p><strong>Repository:</strong> <a href="https://github.com/RishikeshPatill/vanigo" target="_blank" rel="noopener noreferrer" className="text-vanigo-blue hover:underline">GitHub</a></p>
+              <p><strong>Repository:</strong> 
+  <a href="https://github.com/RishikeshPatill/vanigo" target="_blank" rel="noopener noreferrer" className="text-vanigo-blue hover:underline">
+    Rishikesh GitHub
+  </a>, 
+  <a href="https://github.com/sudeepgurjar/vanigo" target="_blank" rel="noopener noreferrer" className="text-vanigo-blue hover:underline">
+    Sudeep GitHub
+  </a>
+</p>
+
             </div>
           </section>
 
