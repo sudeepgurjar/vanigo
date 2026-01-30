@@ -16,12 +16,9 @@ public class AIService {
     private OllamaClient ollamaClient;
 
     public String generateResponse(String userMessage) {
-        try {
-            return ollamaClient.generateResponse(userMessage);
-        } catch (Exception e) {
-            return "I apologize, but I'm having trouble generating a response right now. Error: " + e.getMessage();
-        }
-    }
+    return "AI Service is currently unavailable in cloud deployment.";
+}
+
 
     public String generateSummary(Conversation conversation) {
         try {
