@@ -16,7 +16,23 @@ public class AIService {
     private OllamaClient ollamaClient;
 
     public String generateResponse(String userMessage) {
-    return "AI Service is currently unavailable in cloud deployment.";
+    // Check if running in production
+    String profile = System.getenv("SPRING_PROFILES_ACTIVE");
+    
+    if ("prod".equals(profile)) {
+        return "🤖 AI Chat Response:\n\n" +
+               "Hello! I'm VaniGo's AI assistant. " +
+               "I understand you said: \"" + userMessage + "\"\n\n" +
+               "Note: Full AI capabilities with Llama 3.1 are available in development mode. " +
+               "Cloud AI integration coming soon! 🚀";
+    }
+    
+    try {
+        return ollamaClient.generateResponse(userMessage);
+    } catch (Exception e) {
+        return "I apologize, but I'm having trouble connecting to the AI service right now. " +
+               "Please try again later.";
+    }
 }
 
 
