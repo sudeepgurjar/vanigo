@@ -15,7 +15,7 @@ public class GroqClient {
     private final WebClient webClient;
     private final String apiKey;
 
-    public GroqClient(@Value("${groq.api.key}") String apiKey) {
+    public GroqClient(@Value("${groq.api.key:}") String apiKey) {
         this.apiKey = apiKey;
         this.webClient = WebClient.builder()
                 .baseUrl("https://api.groq.com/openai/v1")
